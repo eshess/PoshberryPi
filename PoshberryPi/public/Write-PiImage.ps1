@@ -26,13 +26,13 @@ Function Write-PiImage {
         [string]$DriveLetter,
         [string]$FileName
     )
-    $IsCancelling = $false
+    $Completed = $false
     $dtStart = (Get-Date)
     $_diskAccess = New-Object -TypeName "Posh.DiskWriter.Win32DiskAccess"
     if((Test-Path $FileName) -eq $false)
     {
         Write-Error "$FileName doesn't exist"
-        break
+        return $Completed
     }
 
     #Get physical drive partition for logical partition
@@ -40,9 +40,8 @@ Function Write-PiImage {
     Write-Verbose "Drive path is $physicalDrive"
     if ([string]::IsNullOrEmpty($physicalDrive))
     {
-        Write-Error "Error: Couldn't map partition to physical drive"
-        $_diskAccess.UnlockDrive()
-        break
+        Write-Error "Failed to map partition to physical drive"
+        return $Completed
     }
 
     #Lock logical drive
@@ -51,7 +50,7 @@ Function Write-PiImage {
     if (!$success)
     {
         Write-Error "Failed to lock drive"
-        break
+        return $Completed
     }
     Start-Sleep -Seconds 5
     #Get drive size
@@ -60,7 +59,7 @@ Function Write-PiImage {
     {
         Write-Error "Failed to get device size"
         $_diskAccess.UnlockDrive();
-        break
+        return $Completed
     }
 
     #Open the physical drive
@@ -69,77 +68,96 @@ Function Write-PiImage {
     {
         Write-Error "Failed to open physical drive"
         $_diskAccess.UnlockDrive()
-        break
+        return $Completed
     }
     $maxBufferSize = 1048576
     $buffer = [System.Array]::CreateInstance([Byte],$maxBufferSize)
     [long]$offset = 0;
     $fileLength = ([System.Io.FileInfo]::new($fileName)).Length
-    $errored = $true
+
     $basefs = [System.Io.FileStream]::new($fileName, [System.Io.FileMode]::Open,[System.Io.FileAccess]::Read)
     $bufferOffset = 0;
     $br = [System.IO.BinaryReader]::new($basefs)
-    while ($offset -lt $fileLength -and !$IsCancelling)
-    {
-        [int]$readBytes = 0
-        do
+    try {
+        [console]::TreatControlCAsInput = $true
+        while ($offset -lt $fileLength -and !$IsCancelling)
         {
-            $readBytes = $br.Read($buffer, $bufferOffset, $buffer.Length - $bufferOffset)
-            $bufferOffset += $readBytes
-        } while ($bufferOffset -lt $maxBufferSize -and $readBytes -ne 0)
+            #Check for Ctrl-C and break if found
+            if ([console]::KeyAvailable) {
+                $key = [system.console]::readkey($true)
+                if (($key.modifiers -band [consolemodifiers]"control") -and ($key.key -eq "C")) {
+                    $IsCancelling = $true
+                    break
+                }
+            }
+            [int]$readBytes = 0
+            do
+            {
+                $readBytes = $br.Read($buffer, $bufferOffset, $buffer.Length - $bufferOffset)
+                $bufferOffset += $readBytes
+            } while ($bufferOffset -lt $maxBufferSize -and $readBytes -ne 0)
 
-        [int]$wroteBytes = 0
-        $bytesToWrite = $bufferOffset;
-        $trailingBytes = 0;
+            [int]$wroteBytes = 0
+            $bytesToWrite = $bufferOffset;
+            $trailingBytes = 0;
 
-        #Assume that the underlying physical drive will at least accept powers of two!
-        if(Get-IsPowerOfTwo $bufferOffset)
-        {
-            #Find highest bit (32-bit max)
-            $highBit = 31;
-            for (; (($bufferOffset -band (1 -shl $highBit)) -eq 0) -and $highBit -ge 0; $highBit--){}
+            #Assume that the underlying physical drive will at least accept powers of two!
+            if(Get-IsPowerOfTwo $bufferOffset)
+            {
+                #Find highest bit (32-bit max)
+                $highBit = 31;
+                for (; (($bufferOffset -band (1 -shl $highBit)) -eq 0) -and $highBit -ge 0; $highBit--){}
 
-            #Work out trailing bytes after last power of two
-            $lastPowerOf2 = 1 -shl $highBit;
+                #Work out trailing bytes after last power of two
+                $lastPowerOf2 = 1 -shl $highBit;
 
-            $bytesToWrite = $lastPowerOf2;
-            $trailingBytes = $bufferOffset - $lastPowerOf2;
+                $bytesToWrite = $lastPowerOf2;
+                $trailingBytes = $bufferOffset - $lastPowerOf2;
+            }
+
+            if ($_diskAccess.Write($buffer, $bytesToWrite, [ref]$wroteBytes) -lt 0)
+            {
+                Write-Error "Null disk handle"
+                return $Completed
+            }
+
+            if ($wroteBytes -ne $bytesToWrite)
+            {
+                Write-Error "Error writing data to drive - past EOF?"
+                return $Completed
+            }
+
+            #Move trailing bytes up - Todo: Suboptimal
+            if ($trailingBytes -gt 0)
+            {
+                $Buffer.BlockCopy($buffer, $bufferOffset - $trailingBytes, $buffer, 0, $trailingBytes);
+                $bufferOffset = $trailingBytes;
+            }
+            else
+            {
+                $bufferOffset = 0;
+            }
+            $offset += $wroteBytes;
+
+            $percentDone = [int](100 * $offset / $fileLength);
+            $tsElapsed = (Get-Date) - $dtStart
+            $bytesPerSec = $offset / $tsElapsed.TotalSeconds;
+            Write-Progress -Activity "Writing to Disk" -Status "Writing at $bytesPerSec" -PercentComplete $percentDone
         }
-
-        if ($_diskAccess.Write($buffer, $bytesToWrite, [ref]$wroteBytes) -lt 0)
-        {
-            Write-Error "Error"
-            break
+        $_diskAccess.Close()
+        $_diskAccess.UnlockDrive()
+        if(-not $IsCancelling) {
+            $Completed = $true
+            $tstotalTime = (Get-Date) - $dtStart
+            Write-Verbose "All Done - Wrote $offset bytes. Elapsed time $($tstotalTime.ToString("dd\.hh\:mm\:ss"))"
+        } else {
+            Write-Verbose "Operation was cancelled"
         }
-
-        if ($wroteBytes -ne $bytesToWrite)
-        {
-            Write-Error "Error writing data to drive - past EOF?"
-            break
-        }
-
-        #Move trailing bytes up - Todo: Suboptimal
-        if ($trailingBytes -gt 0)
-        {
-            $Buffer.BlockCopy($buffer, $bufferOffset - $trailingBytes, $buffer, 0, $trailingBytes);
-            $bufferOffset = $trailingBytes;
-        }
-        else
-        {
-            $bufferOffset = 0;
-        }
-        $offset += $wroteBytes;
-
-        $percentDone = [int](100 * $offset / $fileLength);
-        $tsElapsed = (Get-Date) - $dtStart
-        $bytesPerSec = $offset / $tsElapsed.TotalSeconds;
-        Write-Progress -Activity "Writing to Disk" -Status "Writing at $bytesPerSec" -PercentComplete $percentDone
+    } catch {
+        $_diskAccess.Close()
+        $_diskAccess.UnlockDrive()
+    }finally {
+        [console]::TreatControlCAsInput = $false
     }
-    $errored = $false
-    $_diskAccess.Close()
-    $_diskAccess.UnlockDrive()
-    $tstotalTime = (Get-Date) - $dtStart
-    Write-Verbose "All Done - Wrote $offset bytes. Elapsed time $($tstotalTime.ToString("dd\.hh\:mm\:ss"))"
-
-    return !$errored
+    return $Completed
 }
