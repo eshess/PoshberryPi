@@ -15,6 +15,8 @@ Function Write-PiImage {
     .EXAMPLE
         Write-PiImage -DriveLetter "D:" -FileName "C:\Images\stretch.img"
 
+        # Writes the image file located at C:\Images\stretch.img to the SD card mounted to D:
+
     .LINK
         https://github.com/eshess/PoshberryPi
 

@@ -15,6 +15,7 @@ Function Backup-PiImage {
     .EXAMPLE
         Backup-PiImage -DriveLetter "D:" -FileName "C:\Images\backup2018.img"
 
+        # Creates a backup image of the SD card mounted to drive D: at C:\Images\backup2018.img
     .LINK
         https://github.com/eshess/PoshberryPi
 

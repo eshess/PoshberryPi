@@ -24,6 +24,7 @@ Function Enable-PiWifi {
     .EXAMPLE
         Enable-PiWifi -PSK $PSK -SSID $SSID -Path "D:"
 
+        # Creates a 'wpa_supplicant.conf' file with default settings where possible on the boot volume mounted to D:
     .LINK
         https://github.com/eshess/PoshberryPi
 

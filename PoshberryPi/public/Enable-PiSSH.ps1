@@ -13,6 +13,7 @@ Function Enable-PiSSH {
     .EXAMPLE
         Enable-PiSSH -Path "D:"
 
+        # Creates an empty file named 'ssh' on the boot volume mounted to D:
     .LINK
         https://github.com/eshess/PoshberryPi
 

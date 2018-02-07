@@ -8,9 +8,9 @@ if ($env:BuildSystem -eq 'AppVeyor') {
             WithOptions @{
                 Version = $Env:APPVEYOR_BUILD_VERSION
                 PackageName = $Env:ProjectName
-                Description = 'Sample Module with integrated Build process'
-                Author = "Gael Colas"
-                Owners = "Gael Colas"
+                Description = 'A simple module for setting up and interacting with your Raspberry Pi'
+                Author = "Eli Hess"
+                Owners = "Eli Hess"
                 destinationPath = ".\BuildOutput\$Env:ProjectName"
             }
             Tagged Appveyor
