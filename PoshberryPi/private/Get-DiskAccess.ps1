@@ -23,28 +23,12 @@ Function Get-DiskAccess {
         [string]$DriveLetter
     )
     $_diskAccess = New-Object -TypeName "Posh.DiskWriter.Win32DiskAccess"
-    #Map to physical drive
-    $physicalDrive = $_diskAccess.GetPhysicalPathForLogicalPath($DriveLetter)
-    if([string]::IsNullOrEmpty($physicalDrive)) {
-        Write-Error "Drive map unsuccessful"
-        return $null
-    }
-    Write-Verbose "Physical drive path is $physicalDrive"
     #Lock logical drive
     $success = $_diskAccess.LockDrive($DriveLetter);
     Write-Verbose "Drive lock is $success"
     if (!$success)
     {
         Write-Error "Failed to lock drive"
-        return $null
-    }
-    #Open the physical drive
-    $physicalHandle = $_diskAccess.Open($physicalDrive)
-    Write-Verbose "Physical handle is $physicalHandle"
-    if ($physicalHandle -eq -1)
-    {
-        Write-Error "Failed to open physical drive"
-        $_diskAccess.UnlockDrive();
         return $null
     }
     return $_diskAccess

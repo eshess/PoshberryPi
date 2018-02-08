@@ -31,17 +31,27 @@ Function Enable-PiWifi {
     #>
     [cmdletbinding()]
     param (
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
         [Parameter()]
         [string]$KeyMgmt = "WPA-PSK",
         [Parameter()]
-        [string]$PSK,
-        [Parameter()]
-        [string]$SSID,
+        [System.Management.Automation.PSCredential]$WifiCredential,
         [Parameter()]
         [string]$CountryCode = "US",
         [Parameter()]
-        [string]$Path
+        [switch]$EncryptPSK
     )
+    if(!$PSBoundParameters.ContainsKey("WifiCredential"))
+    {
+        $WifiCredential = Get-Credential -Message "Please enter your Network SSID in the username field and passphrase as the password"
+    }
+    if($EncryptPSK){
+        $PSK = Get-EncryptedPSK -WifiCredential $WifiCredential
+    } else {
+        $PSK = $WifiCredential.GetNetworkCredential().Password
+    }
+    $SSID = $WifiCredential.UserName
     $Output = @"
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1

@@ -19,14 +19,14 @@ Function Get-EncryptedPSK {
     [cmdletbinding()]
     param (
         [Parameter()]
-        [System.Management.Automation.PSCredential]$Credential
+        [System.Management.Automation.PSCredential]$WifiCredential
     )
-    if(!$PSBoundParameters.ContainsKey("Credential"))
+    if(!$PSBoundParameters.ContainsKey("WifiCredential"))
     {
-        $Credential = Get-Credential -Message "Please enter your Network SSID in the username field and passphrase as the password"
+        $WifiCredential = Get-Credential -Message "Please enter your Network SSID in the username field and passphrase as the password"
     }
-    $NetCred = $Credential.GetNetworkCredential()
-    $Salt = [System.Text.Encoding]::ASCII.GetBytes($Credential.UserName)
+    $NetCred = $WifiCredential.GetNetworkCredential()
+    $Salt = [System.Text.Encoding]::ASCII.GetBytes($WifiCredential.UserName)
     $rfc = [System.Security.Cryptography.Rfc2898DeriveBytes]::New($NetCred.Password,$Salt,4096)
     Write-Output (Convert-ByteArrayToHexString -ByteArray $rfc.GetBytes(32) -Delimiter "").ToLower()
 }

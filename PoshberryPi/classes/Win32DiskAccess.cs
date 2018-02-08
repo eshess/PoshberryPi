@@ -35,7 +35,7 @@ namespace Posh.DiskWriter
         public  int DiskNumber;
         public ulong StartingOffset;
         public ulong ExtentLength;
-    } 
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct VolumeDiskExtents
@@ -44,7 +44,7 @@ namespace Posh.DiskWriter
         public DISK_EXTENT DiskExtent1;
     }
 
-    public static class NativeMethods 
+    public static class NativeMethods
     {
         internal const uint OPEN_EXISTING = 3;
         internal const uint GENERIC_WRITE = (0x40000000);
@@ -253,7 +253,7 @@ namespace Posh.DiskWriter
             Marshal.FreeHGlobal(vdeBlob);
 
             diskHandle.Dispose();
-            
+
             var path = "";
             if(diskIndex >= 0)
                 path = @"\\.\PhysicalDrive" + diskIndex;
