@@ -19,7 +19,7 @@ Param (
 
     [Int]
     [ValidateRange(0,100)]
-    $CodeCoverageThreshold = (property CodeCoverageThreshold 90)
+    $CodeCoverageThreshold = (property CodeCoverageThreshold 0)
 )
 
 # Synopsis: Execute the Pester Unit tests

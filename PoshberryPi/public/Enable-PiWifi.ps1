@@ -9,17 +9,17 @@ Function Enable-PiWifi {
     .PARAMETER KeyMgmt
         eg WPA-PSK
 
-    .PARAMETER PSK
-        Pre-shared Key
-
-    .PARAMETER SSID
-        Wifi Network ID
+    .PARAMETER WifiCredential
+        Credential object with the Username set to the WIFI SSID and the password set to the PSK
 
     .PARAMETER CountryCode
         eg US
 
     .PARAMETER Path
         Drive letter of boot volume
+
+    .PARAMETER EncryptPSK
+        Switch parameter for storing your PSK as encrypted text or plain text
 
     .EXAMPLE
         Enable-PiWifi -PSK $PSK -SSID $SSID -Path "D:"
