@@ -27,12 +27,12 @@ Function Backup-PiImage {
         [parameter(Mandatory=$true)]
         [string]$FileName
     )
+    try { [Posh.DiskWriter.Win32DiskAccess] | Out-Null } catch { Add-Type -Path "$PSScriptRoot\classes\Win32DiskAccess.cs" }
     $Completed = $false;
     $IsCancelling = $false
     $dtstart = Get-Date
     $maxBufferSize = 1048576
     $DriveLetter = Format-DriveLetter $DriveLetter
-
     #Validate we're not targeting the system drive
     if($DriveLetter -eq $ENV:SystemDrive) {
         Write-Error "System Drive cannot be targeted"

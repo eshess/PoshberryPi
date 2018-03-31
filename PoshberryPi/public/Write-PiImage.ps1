@@ -26,6 +26,7 @@ Function Write-PiImage {
         [string]$DriveLetter,
         [string]$FileName
     )
+    try { [Posh.DiskWriter.Win32DiskAccess] | Out-Null } catch { Add-Type -Path "$PSScriptRoot\classes\Win32DiskAccess.cs" }
     $Completed = $false
     $dtStart = (Get-Date)
     if((Test-Path $FileName) -eq $false)

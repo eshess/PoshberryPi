@@ -7,14 +7,14 @@
 
     [string]
     $BuildOutput = (property BuildOutput 'C:\BuildOutput'),
-    
+
     [string]
     $ModuleVersion = (property ModuleVersion $(
         if($ModuleVersion = Get-NextPSGalleryVersion -Name $ProjectName -ea 0) { $ModuleVersion } else { '0.0.1' }
         )),
 
     $MergeList = (property MergeList @('enum*','class*','priv*','pub*') ),
-    
+
     [string]
     $LineSeparation = (property LineSeparation ('-' * 78))
 
@@ -56,7 +56,7 @@ Task Clean_Empty_Folders_from_Build_Output {
     Get-ChildItem $BuildOutput -Recurse -Force | Sort-Object -Property FullName -Descending | Where-Object {
         $_.PSIsContainer -and
         $_.GetFiles().count -eq 0 -and
-        $_.GetDirectories().Count -eq 0 
+        $_.GetDirectories().Count -eq 0
     } | Remove-Item
 }
 
@@ -65,7 +65,7 @@ Task Update_Module_Manifest {
     if (![io.path]::IsPathRooted($BuildOutput)) {
         $BuildOutput = Join-Path -Path $BuildRoot -ChildPath $BuildOutput
     }
-    
+
     $BuiltModule = [io.path]::Combine($BuildOutput,$ProjectName,"$ProjectName.psd1")
     Write-Build Green "  Updating Module functions in Module Manifest..."
     Set-ModuleFunctions -Path $BuiltModule
