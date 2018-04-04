@@ -13,5 +13,8 @@ The code being used to image your SD card was based on an open source C# project
 ### For the disk imaging and reading of images
 https://github.com/DynamicDevices/DiskImager
 
+### TCP Client/Server code credit goes to Boe Prox
+https://learn-powershell.net/2014/02/22/building-a-tcp-server-using-powershell/
+
 ### Byte array conversion
 https://cyber-defense.sans.org/blog/2010/02/11/powershell-byte-array-hex-convert
