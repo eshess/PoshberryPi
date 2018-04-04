@@ -14,7 +14,7 @@ foreach ($class in $ClassLoadOrder.order) {
         . $path
     }
 }
-Add-Type -Path "$PSScriptRoot\classes\Win32DiskAccess.cs"
+
 
 #Get public and private function definition files.
 $Public  = @( Get-ChildItem -Path $PSScriptRoot\Public\*.ps1 -ErrorAction SilentlyContinue )
