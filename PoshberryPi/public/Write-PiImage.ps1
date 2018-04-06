@@ -6,14 +6,14 @@ Function Write-PiImage {
     .DESCRIPTION
         Writes an image file to an SD card
 
-    .PARAMETER DriveLetter
+    .PARAMETER TargetVolume
         Drive letter of mounted SD card
 
     .PARAMETER FileName
         Path to image file
 
     .EXAMPLE
-        Write-PiImage -DriveLetter "D:" -FileName "C:\Images\stretch.img"
+        Write-PiImage -TargetVolume "D:" -FileName "C:\Images\stretch.img"
 
         # Writes the image file located at C:\Images\stretch.img to the SD card mounted to D:
 
@@ -23,7 +23,7 @@ Function Write-PiImage {
     #>
     [cmdletbinding()]
     param (
-        [string]$DriveLetter,
+        [string]$TargetVolume,
         [string]$FileName
     )
     try { [Posh.DiskWriter.Win32DiskAccess] | Out-Null } catch { Add-Type -Path "$PSScriptRoot\classes\Win32DiskAccess.cs" }
@@ -34,23 +34,23 @@ Function Write-PiImage {
         Write-Error "$FileName doesn't exist"
         return $Completed
     }
-    $DriveLetter = Format-DriveLetter $DriveLetter
+    $TargetVolume = Format-DriveLetter $TargetVolume
 
     #Validate we're not targeting the system drive and the drive we're targeting is empty
-    if($DriveLetter -eq $ENV:SystemDrive) {
+    if($TargetVolume -eq $ENV:SystemDrive) {
         Write-Error "System Drive cannot be used as source"
         return $Completed
-    } elseif ((Get-ChildItem $DriveLetter).Count -gt 0) {
+    } elseif ((Get-ChildItem $TargetVolume).Count -gt 0) {
         Write-Error "Target volume is not empty. Use diskpart to clean and reformat the target partition to FAT32."
         return $Completed
     } else {
-        $DiskAccess = Get-DiskAccess -DriveLetter $DriveLetter
+        $DiskAccess = Get-DiskAccess -TargetVolume $TargetVolume
     }
 
     #Validate disk access is operational
     if($DiskAccess) {
         #Get drive size and open the physical drive
-        $PhysicalDrive = Get-PhysicalDrive -DriveLetter $DriveLetter
+        $PhysicalDrive = Get-PhysicalDrive -TargetVolume $TargetVolume
         if($PhysicalDrive){
             $physicalHandle = Get-DiskHandle -DiskAccess $DiskAccess -PhysicalDrive $PhysicalDrive.DeviceID
         }

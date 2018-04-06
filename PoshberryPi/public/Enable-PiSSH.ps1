@@ -7,11 +7,11 @@ Function Enable-PiSSH {
         Creates an empty file named 'ssh' in the specified path. Placing this file in the boot volume of your Rasperry Pi
         will enable SSH remoting on next boot
 
-    .PARAMETER Path
+    .PARAMETER TargetVolume
         Drive letter of target boot volume
 
     .EXAMPLE
-        Enable-PiSSH -Path "D:"
+        Enable-PiSSH -TargetVolume "D:"
 
         # Creates an empty file named 'ssh' on the boot volume mounted to D:
     .LINK
@@ -21,7 +21,8 @@ Function Enable-PiSSH {
     [cmdletbinding()]
     param(
         [Parameter()]
-        [String]$Path
+        [String]$TargetVolume
     )
-    New-Item -Path "$Path\" -Name ssh -ItemType File
+    $TargetVolume = Format-DriveLetter $TargetVolume
+    New-Item -Path "$TargetVolume\" -Name ssh -ItemType File
 }

@@ -30,6 +30,7 @@ Function Format-DriveLetter {
             break
         }
         2 {
+            $DriveLetter = "$($DriveLetter.Substring(0,1)):"
             break
         }
         default {

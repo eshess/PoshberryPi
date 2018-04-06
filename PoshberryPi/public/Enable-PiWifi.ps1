@@ -15,14 +15,14 @@ Function Enable-PiWifi {
     .PARAMETER CountryCode
         eg US
 
-    .PARAMETER Path
+    .PARAMETER TargetVolume
         Drive letter of boot volume
 
     .PARAMETER EncryptPSK
         Switch parameter for storing your PSK as encrypted text or plain text
 
     .EXAMPLE
-        Enable-PiWifi -PSK $PSK -SSID $SSID -Path "D:"
+        Enable-PiWifi -PSK $PSK -SSID $SSID -TargetVolume "D:"
 
         # Creates a 'wpa_supplicant.conf' file with default settings where possible on the boot volume mounted to D:
     .LINK
@@ -32,7 +32,7 @@ Function Enable-PiWifi {
     [cmdletbinding()]
     param (
         [Parameter(Mandatory=$true)]
-        [string]$Path,
+        [string]$TargetVolume,
         [Parameter()]
         [string]$KeyMgmt = "WPA-PSK",
         [Parameter()]
@@ -42,6 +42,7 @@ Function Enable-PiWifi {
         [Parameter()]
         [switch]$EncryptPSK
     )
+    $TargetVolume = Format-DriveLetter $TargetVolume
     if(!$PSBoundParameters.ContainsKey("WifiCredential"))
     {
         $WifiCredential = Get-Credential -Message "Please enter your Network SSID in the username field and passphrase as the password"
@@ -63,5 +64,5 @@ network={
     key_mgmt=$KeyMgmt
 }
 "@
-    $Output.Replace("`r`n","`n") | Out-File "$Path\wpa_supplicant.conf" -Encoding ascii
+    $Output.Replace("`r`n","`n") | Out-File "$TargetVolume\wpa_supplicant.conf" -Encoding ascii
 }

@@ -6,14 +6,14 @@ Function Backup-PiImage {
     .DESCRIPTION
         Reads mounted SD card and saves contents to an img file
 
-    .PARAMETER DriveLetter
+    .PARAMETER SourceVolume
         Drive letter of source SD card
 
     .PARAMETER FileName
         Full file path of img file to create
 
     .EXAMPLE
-        Backup-PiImage -DriveLetter "D:" -FileName "C:\Images\backup2018.img"
+        Backup-PiImage -SourceVolume "D:" -FileName "C:\Images\backup2018.img"
 
         # Creates a backup image of the SD card mounted to drive D: at C:\Images\backup2018.img
     .LINK
@@ -23,7 +23,7 @@ Function Backup-PiImage {
     [cmdletbinding()]
     param(
         [parameter(Mandatory=$true)]
-        [string]$DriveLetter,
+        [string]$SourceVolume,
         [parameter(Mandatory=$true)]
         [string]$FileName
     )
@@ -32,18 +32,18 @@ Function Backup-PiImage {
     $IsCancelling = $false
     $dtstart = Get-Date
     $maxBufferSize = 1048576
-    $DriveLetter = Format-DriveLetter $DriveLetter
+    $SourceVolume = Format-DriveLetter $SourceVolume
     #Validate we're not targeting the system drive
-    if($DriveLetter -eq $ENV:SystemDrive) {
+    if($SourceVolume -eq $ENV:SystemDrive) {
         Write-Error "System Drive cannot be targeted"
         return $Completed
     } else {
-        $DiskAccess = Get-DiskAccess -DriveLetter $DriveLetter
+        $DiskAccess = Get-DiskAccess -TargetVolume $SourceVolume
     }
 
     if($DiskAccess) {
         #Get drive size and open the physical drive
-        $PhysicalDrive = Get-PhysicalDrive -DriveLetter $DriveLetter
+        $PhysicalDrive = Get-PhysicalDrive -TargetVolume $SourceVolume
         if($PhysicalDrive){
             $readSize = $PhysicalDrive.Size
             $physicalHandle = Get-DiskHandle -DiskAccess $DiskAccess -PhysicalDrive $PhysicalDrive.DeviceID

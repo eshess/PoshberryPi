@@ -6,11 +6,11 @@ Function Get-DiskAccess {
     .DESCRIPTION
         Returns a Win32DiskAccess object if validations pass
 
-    .PARAMETER DriveLetter
+    .PARAMETER TargetVolume
         Volume of mounted drive to access
 
     .EXAMPLE
-        $_diskAccess = Get-DiskAccess -DriveLetter "D:"
+        $_diskAccess = Get-DiskAccess -TargetVolume "D:"
 
         # Attempts to lock and open access to D: and return the access object to $_diskAccess
     .LINK
@@ -20,11 +20,11 @@ Function Get-DiskAccess {
     [cmdletbinding()]
     param(
         [parameter(Mandatory=$true)]
-        [string]$DriveLetter
+        [string]$TargetVolume
     )
     $_diskAccess = New-Object -TypeName "Posh.DiskWriter.Win32DiskAccess"
     #Lock logical drive
-    $success = $_diskAccess.LockDrive($DriveLetter);
+    $success = $_diskAccess.LockDrive($TargetVolume);
     Write-Verbose "Drive lock is $success"
     if (!$success)
     {
